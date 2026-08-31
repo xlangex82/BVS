@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Status verwalten
+
+<div class="card">
+  <h2>Abschluss-Status</h2>
+  <p class="muted">Diese Status gelten als erledigte Vorgänge. Sie werden bei „Nur aktive Vorgänge“ automatisch ausgeblendet.</p>
+  <form method="post">
+    <input type="hidden" name="action" value="save_classifications">
+    <div class="status-completion-grid">
+      {% for s in statuses %}
+        <label class="check status-completion-row">
+          <input type="checkbox" name="completed_{{s.id}}" {% if s.classification and s.classification.is_completed %}checked{% endif %}>
+          <span>{{s.name}}</span>
+        </label>
+      {% endfor %}
+    </div>
+    <div class="form-actions"><button class="button primary" type="submit">Abschluss-Status speichern</button></div>
+  </form>
+</div>
+{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Status verwalten</h1>
+    <p class="muted">Statuswerte können jederzeit erweitert oder umbenannt werden.</p>
+  </div>
+  <a class="button light" href="{{ url_for('index') }}">← Übersicht</a>
+</div>
+
+<div class="card">
+  <h2>Neuen Status anlegen</h2>
+  <form method="post" class="inline-form"><input type="hidden" name="action" value="add_status">
+    <input name="name" required placeholder="z. B. Assessment Center">
+    <button class="button primary" type="submit">Hinzufügen</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Vorhandene Status</h2>
+  {% for s in statuses %}
+    <div class="status-row">
+      <form method="post" action="{{ url_for('rename_status', status_id=s.id) }}" class="inline-form">
+        <input name="name" value="{{ s.name }}" required>
+        <button class="button" type="submit">Umbenennen</button>
+      </form>
+      <form method="post" action="{{ url_for('delete_status', status_id=s.id) }}" onsubmit="return confirm('Status wirklich löschen?')">
+        <button class="link-danger" type="submit">Löschen</button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

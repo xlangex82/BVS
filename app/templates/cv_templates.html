@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}CV-Templates – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>CV-Design-Templates</h1><p class="muted">Design und Daten sind getrennt. Eigene Templates können erstellt oder aus bestehenden Vorlagen dupliziert werden.</p></div><div class="page-actions"><a class="button primary" href="{{url_for('cv_template_new')}}">+ Eigenes Template</a><a class="button" href="{{url_for('cv_index')}}">← Master-Lebenslauf</a></div></div>
+<div class="template-grid">
+{% for t in templates %}
+  <article class="card template-card">
+    <div class="template-mini template-{{t.slug}}"><div class="mini-head"></div><div class="mini-line wide"></div><div class="mini-line"></div><div class="mini-block"></div><div class="mini-line wide"></div><div class="mini-line"></div></div>
+    <h2>{{t.name}}</h2><p>{{t.description}}</p>
+    <p class="small">{{'Aktiv' if t.is_active else 'Deaktiviert'}} · Sortierung {{t.sort_order}}</p>
+    <div class="template-actions"><a class="button" href="{{url_for('cv_template_edit',template_id=t.id)}}">Design bearbeiten</a><form method="post" action="{{url_for('cv_template_duplicate',template_id=t.id)}}"><button class="button light">Duplizieren</button></form></div>
+  </article>
+{% endfor %}
+</div>
+{% endblock %}

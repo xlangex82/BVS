@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Bewerbungsübersicht – {{branding.app_name}}</title>
+<style>
+@page{size:A4 landscape;margin:10mm}
+*{box-sizing:border-box}body{margin:0;background:#e9edf2;color:#172033;font:9pt/1.35 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;background:#172033;padding:9px;display:flex;justify-content:center;gap:8px}.toolbar a,.toolbar button{border:0;background:#fff;color:#172033;border-radius:5px;padding:7px 11px;text-decoration:none;cursor:pointer}.sheet{width:297mm;min-height:210mm;margin:12px auto;background:#fff;padding:10mm;box-shadow:0 3px 18px rgba(0,0,0,.15)}header{display:flex;align-items:center;gap:5mm;margin-bottom:5mm}.logo{max-width:22mm;max-height:18mm}.brand h1{font-size:17pt;margin:0}.brand p{margin:1mm 0 0;color:#667085}.meta{margin-left:auto;text-align:right;color:#667085}.filters{font-size:8pt;margin:0 0 4mm;color:#667085}.summary{display:flex;gap:4mm;flex-wrap:wrap;margin-bottom:4mm}.pill{border:1px solid #d0d5dd;border-radius:99px;padding:1mm 2.5mm}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #d0d5dd;padding:2mm;vertical-align:top;overflow-wrap:anywhere}th{background:#172033;color:#fff;font-size:7.5pt}tbody tr:nth-child(even){background:#f8fafc}.c-ref{width:8%}.c-company{width:18%}.c-position{width:20%}.c-status{width:13%}.c-date{width:10%}.c-follow{width:11%}.c-action{width:20%}.footer{text-align:center;color:#667085;font-size:7.5pt;margin-top:5mm}@media print{body{background:#fff}.toolbar{display:none}.sheet{width:auto;min-height:0;margin:0;padding:0;box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="window.print()">Drucken / Als PDF speichern</button>
+  <a href="{{url_for('overview_pdf',q=filters.q,status=filters.status or '',sort=filters.sort,date_from=filters.date_from,date_to=filters.date_to)}}">PDF herunterladen</a>
+  <a href="{{url_for('index',q=filters.q,status=filters.status or '',sort=filters.sort,date_from=filters.date_from,date_to=filters.date_to)}}">Zurück</a>
+</div>
+<main class="sheet">
+<header>
+  {% if branding.logo_filename %}<img class="logo" src="{{url_for('branding_logo',filename=branding.logo_filename)}}" alt="Logo">{% endif %}
+  <div class="brand"><h1>{{branding.app_name}}</h1><p>{{branding.app_subname}}</p></div>
+  <div class="meta"><strong>Bewerbungsübersicht</strong><br>Stand {{today.strftime('%d.%m.%Y')}}<br>{{applications|length}} Einträge</div>
+</header>
+{% set f=[] %}
+<div class="filters">
+  {% if filters.process_mode %}<span>Vorgänge: {{ {'active':'Nur aktive','completed':'Nur erledigte','all':'Alle'}.get(filters.process_mode,filters.process_mode) }}</span>{% endif %}
+{% if filters.q %}Suche: <strong>{{filters.q}}</strong> · {% endif %}
+  {% if filters.status %}{% for s in statuses %}{% if s.id==filters.status %}Status: <strong>{{s.name}}</strong> · {% endif %}{% endfor %}{% endif %}
+  {% if filters.date_from %}Bewerbungsdatum ab: <strong>{{filters.date_from}}</strong> · {% endif %}
+  {% if filters.date_to %}bis: <strong>{{filters.date_to}}</strong>{% endif %}
+</div>
+<div class="summary">
+  {% for name,count in status_counts.items() %}<span class="pill">{{name}}: <strong>{{count}}</strong></span>{% endfor %}
+</div>
+<table>
+<thead><tr><th class="c-ref">Ref.</th><th class="c-company">Unternehmen</th><th class="c-position">Position</th><th class="c-status">Status</th><th class="c-date">Bewerbung</th><th class="c-follow">Wiedervorlage</th><th class="c-action">Nächste Aktion</th></tr></thead>
+<tbody>
+{% for a in applications %}
+<tr>
+<td>{{a.reference}}</td><td><strong>{{a.company}}</strong></td><td>{{a.position}}</td><td>{{a.status.name}}</td>
+<td>{{a.application_date.strftime('%d.%m.%Y') if a.application_date else '–'}}</td>
+<td>{{a.follow_up_date.strftime('%d.%m.%Y') if a.follow_up_date else '–'}}</td>
+<td>{{a.next_action or '–'}}</td>
+</tr>
+{% else %}<tr><td colspan="7">Keine Bewerbungen für diese Filter.</td></tr>{% endfor %}
+</tbody>
+</table>
+<div class="footer">© {{today.year}} {{branding.copyright_holder}} · Autor: {{branding.author}}{% if branding.footer_text %} · {{branding.footer_text}}{% endif %}</div>
+</main>
+</body>
+</html>

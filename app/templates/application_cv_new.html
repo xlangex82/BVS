@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}CV erstellen – {{branding.app_name}}<script>(function(){const radios=document.querySelectorAll('[name=source_mode]'), row=document.getElementById('universal-source-row');function sync(){if(row)row.style.display=document.querySelector('[name=source_mode]:checked').value==='universal'?'block':'none';}radios.forEach(r=>r.addEventListener('change',sync));sync();})();</script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>CV aus Master-Lebenslauf erstellen</h1><p class="muted">{{application.company}} · {{application.position}}</p></div><a class="button" href="{{url_for('edit_application',application_id=application.id)}}">← Bewerbung</a></div>
+<form method="post" enctype="multipart/form-data" class="cv-create-form"><section class="card"><h2>Quelle</h2><div class="cv-source-choice"><label><input type="radio" name="source_mode" value="master" checked> Direkt aus Master-Lebenslauf</label><label><input type="radio" name="source_mode" value="universal"> Aus universellem CV</label></div>{% if universal_options %}<label id="universal-source-row">Universeller CV<select name="universal_cv_id"><option value="">Bitte wählen</option>{% for u in universal_options %}<option value="{{u.id}}">{{u.title}}{% if u.target_position %} · {{u.target_position}}{% endif %}</option>{% endfor %}</select></label>{% else %}<p class="muted">Noch keine universellen CVs vorhanden. <a href="{{url_for('universal_cv_new')}}">Universellen CV erstellen</a></p>{% endif %}</section>
+<section class="card">
+<div class="form-grid">
+<div><h2>Referenz zur Bewerbung</h2>
+<label>Interner Titel<input name="title" value="Lebenslauf"></label>
+<label>Zielunternehmen<input name="target_company" value="{{application.company}}"></label>
+<label>Zielposition<input name="target_position" value="{{application.position}}"></label>
+<label>Design-Template<select name="template_id" required>{% for t in templates %}<option value="{{t.id}}" {% if t.slug=='modern' %}selected{% endif %}>{{t.name}} – {{t.description}}</option>{% endfor %}</select></label></div>
+<div><h2>Bewerbungsspezifisches Profil</h2><label>Kurzprofil<textarea name="profile_summary" rows="11">{{profile.summary if profile and profile.summary else ''}}</textarea></label></div>
+</div>
+</section>
+
+<section class="card">
+<div class="section-head"><div><h2>CV-Kopf als Snapshot</h2><p class="muted">Diese Angaben gehören nur zu diesem Lebenslauf und werden später nicht durch globale Änderungen überschrieben.</p></div></div>
+<div class="settings-grid">
+<label>Dokumentüberschrift<input name="document_title" value="Lebenslauf"></label>
+<label>Freie Unterzeile<input name="header_subtitle" placeholder="z. B. Profil für Cloud & Infrastructure"></label>
+<label>Kopfzeilen-Layout<select name="header_layout"><option value="photo_right" selected>Foto rechts</option><option value="photo_left">Foto links</option><option value="centered">Zentriert</option><option value="minimal">Minimal</option></select></label>
+<div class="header-switches">
+<label class="check"><input type="checkbox" name="show_document_title" checked> Dokumentüberschrift anzeigen</label>
+<label class="check"><input type="checkbox" name="show_professional_title" checked> Berufsbezeichnung aus Master anzeigen</label>
+<label class="check"><input type="checkbox" name="show_target_position" checked> Zielposition anzeigen</label>
+<label class="check"><input type="checkbox" name="show_target_company" checked> Zielunternehmen anzeigen</label>
+<label class="check"><input type="checkbox" name="show_contact" checked> Kontaktdaten anzeigen</label>
+</div>
+</div>
+
+<div class="cv-media-grid">
+<div>
+<h3>Logo</h3>
+<label><input type="radio" name="logo_source" value="none" checked> Kein Logo</label>
+{% if has_system_logo %}<label><input type="radio" name="logo_source" value="system"> Aktuelles B-V-S-Logo als Snapshot übernehmen</label>{% endif %}
+<label><input type="radio" name="logo_source" value="custom"> Eigenes Logo hochladen</label>
+<input type="file" name="header_logo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+</div>
+<div>
+<h3>Bewerbungsfoto</h3>
+<label><input type="radio" name="photo_source" value="none" {% if not master_photo %}checked{% endif %}> Kein Foto</label>
+{% if master_photo %}<label><input type="radio" name="photo_source" value="master" checked> Master-Profilfoto als Snapshot übernehmen</label>{% endif %}
+<label><input type="radio" name="photo_source" value="custom"> Eigenes Foto für diesen CV hochladen</label>
+<input type="file" name="header_photo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+</div>
+</div>
+</section>
+
+<div class="snapshot-notice"><strong>Snapshot-Prinzip:</strong> Lebenslaufdaten, Foto und ein übernommenes Logo werden für diese Bewerbung unabhängig gespeichert.</div>
+<div class="form-actions"><button class="button primary">CV-Snapshot erstellen</button></div>
+</form>
+{% endblock %}

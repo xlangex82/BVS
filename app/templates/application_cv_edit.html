@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{cv.title}} – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head">
+<div><h1>{{cv.title}}</h1><p class="muted">{{cv.application.reference}} · Snapshot für {{cv.target_company or cv.application.company}}</p></div>
+<div class="page-actions"><a class="button" target="_blank" href="{{url_for('application_cv_preview',cv_id=cv.id)}}">Vorschau / Drucken</a><a class="button" href="{{url_for('application_cv_pdf',cv_id=cv.id)}}">PDF herunterladen</a><a class="button light" href="{{url_for('edit_application',application_id=cv.application_id)}}">← Bewerbung</a></div>
+</div>
+<form method="post" enctype="multipart/form-data">
+<section class="card">
+<div class="settings-grid">
+<label>Interner Titel<input name="title" value="{{cv.title}}"></label>
+<label>Template<select name="template_id">{% for t in templates %}<option value="{{t.id}}" {% if cv.template_id==t.id %}selected{% endif %}>{{t.name}}{{' (deaktiviert)' if not t.is_active else ''}}</option>{% endfor %}</select></label>
+<label>Zielunternehmen<input name="target_company" value="{{cv.target_company or ''}}"></label>
+<label>Zielposition<input name="target_position" value="{{cv.target_position or ''}}"></label>
+</div>
+<label>Kurzprofil<textarea name="profile_summary" rows="5">{{cv.profile_summary or ''}}</textarea></label>
+</section>
+
+<section class="card cv-header-editor">
+<div class="section-head"><div><h2>CV-Kopfzeile / Header-Snapshot</h2><p class="muted">Logo, Foto und Kopftexte gehören nur zu diesem CV.</p></div></div>
+<div class="settings-grid">
+<label>Dokumentüberschrift<input name="document_title" value="{{header.document_title or 'Lebenslauf'}}"></label>
+<label>Freie Unterzeile<input name="header_subtitle" value="{{header.header_subtitle or ''}}" placeholder="z. B. Profil für Cloud & Infrastructure"></label>
+<label>Header-Layout<select name="header_layout"><option value="photo_right" {% if header.header_layout=='photo_right' %}selected{% endif %}>Foto rechts</option><option value="photo_left" {% if header.header_layout=='photo_left' %}selected{% endif %}>Foto links</option><option value="centered" {% if header.header_layout=='centered' %}selected{% endif %}>Zentriert</option><option value="minimal" {% if header.header_layout=='minimal' %}selected{% endif %}>Minimal</option></select></label>
+<div class="header-switches">
+<label class="check"><input type="checkbox" name="show_document_title" {% if header.show_document_title %}checked{% endif %}> Dokumentüberschrift anzeigen</label>
+<label class="check"><input type="checkbox" name="show_professional_title" {% if header.show_professional_title %}checked{% endif %}> Berufsbezeichnung anzeigen</label>
+<label class="check"><input type="checkbox" name="show_target_position" {% if header.show_target_position %}checked{% endif %}> Zielposition anzeigen</label>
+<label class="check"><input type="checkbox" name="show_target_company" {% if header.show_target_company %}checked{% endif %}> Zielunternehmen anzeigen</label>
+<label class="check"><input type="checkbox" name="show_contact" {% if header.show_contact %}checked{% endif %}> Kontaktdaten anzeigen</label>
+</div>
+</div>
+
+<div class="cv-media-grid">
+<div><h3>Logo dieses Snapshots</h3>
+<div class="cv-media-preview">{% if header.logo_filename %}<img src="{{url_for('cv_media',filename=header.logo_filename)}}" alt="CV-Logo">{% else %}<span>Kein Logo</span>{% endif %}</div>
+<label>Eigenes Logo ersetzen<input type="file" name="header_logo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
+<div class="cv-media-actions">{% if has_system_logo %}<button class="button light" type="submit" name="action" value="copy_system_logo" formnovalidate>B-V-S-Logo als Snapshot kopieren</button>{% endif %}{% if header.logo_filename %}<button class="button danger-button" type="submit" name="action" value="remove_header_logo" formnovalidate>Logo entfernen</button>{% endif %}</div>
+</div>
+<div><h3>Foto dieses Snapshots</h3>
+<div class="cv-media-preview photo">{% if header.photo_filename %}<img src="{{url_for('cv_media',filename=header.photo_filename)}}" alt="CV-Foto">{% else %}<span>Kein Foto</span>{% endif %}</div>
+<label>Eigenes Foto ersetzen<input type="file" name="header_photo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
+<div class="cv-media-actions">{% if master_photo %}<button class="button light" type="submit" name="action" value="copy_master_photo" formnovalidate>Master-Foto als Snapshot kopieren</button>{% endif %}{% if header.photo_filename %}<button class="button danger-button" type="submit" name="action" value="remove_header_photo" formnovalidate>Foto entfernen</button>{% endif %}</div>
+</div>
+</div>
+</section>
+
+
+{% for section,items in groups.items() %}
+<section class="card cv-snapshot-section">
+<div class="section-head"><div><h2>{{section_labels[section]}}</h2><span class="muted">{{items|length}} Snapshot-Einträge</span></div></div>
+{% for entry in items %}
+{% set d = entry_data(entry) %}
+<div class="snapshot-row">
+  <label class="snapshot-visible"><input type="checkbox" name="visible_{{entry.id}}" {% if entry.visible %}checked{% endif %}> Anzeigen</label>
+  <label class="snapshot-sort">Reihenfolge<input type="number" name="sort_{{entry.id}}" value="{{entry.sort_order}}"></label>
+  <div class="snapshot-main">
+    {% if section=='experience' %}<strong>{{d.get('position') or 'Berufserfahrung'}}</strong><span>{{d.get('employer') or ''}}</span>
+    {% elif section=='education' %}<strong>{{d.get('degree') or d.get('field_of_study') or d.get('institution') or 'Ausbildung'}}</strong><span>{{d.get('institution') or ''}}</span>
+    {% elif section=='skills' %}<strong>{{d.get('name') or 'Skill'}}</strong><span>{{d.get('category') or ''}}{% if d.get('level') %} · {{d.get('level')}}{% endif %}</span>
+    {% elif section=='languages' %}<strong>{{d.get('language') or 'Sprache'}}</strong><span>{{d.get('level') or ''}}</span>
+    {% elif section=='certifications' %}<strong>{{d.get('name') or 'Zertifikat'}}</strong><span>{{d.get('issuer') or ''}}</span>
+    {% elif section=='projects' %}<strong>{{d.get('name') or 'Projekt'}}</strong><span>{{d.get('role') or ''}}</span>
+    {% else %}<strong>{{d.get('title') or 'Weitere Station'}}</strong><span>{{d.get('organization') or ''}}</span>{% endif %}
+    <span class="small">Snapshot-ID {{entry.id}} · Master-ID {{entry.source_id or '–'}} · {{'sichtbar' if entry.visible else 'ausgeblendet'}}</span>
+  </div>
+  <a class="button small-button" href="{{url_for('application_cv_entry_edit',entry_id=entry.id)}}">Inhalt bearbeiten</a>
+</div>
+{% else %}<p class="muted">Keine Einträge im Snapshot.</p>{% endfor %}
+</section>
+{% endfor %}
+<div class="sticky-save"><button class="button primary">CV-Version speichern</button></div>
+</form>
+{% endblock %}

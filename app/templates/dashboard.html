@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Bewerbungsverwaltung{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Dashboard</h1><p class="muted">Schneller Überblick über deine Bewerbungsvorgänge.</p></div><a class="button primary" href="{{ url_for('new_application') }}">+ Neue Bewerbung</a></div>
+<div class="stats"><div class="stat"><span>Gesamt</span><strong>{{ total }}</strong></div><div class="stat"><span>Aktiv</span><strong>{{ active }}</strong></div><div class="stat"><span>Gespräche</span><strong>{{ interviews }}</strong></div><div class="stat"><span>Angebote</span><strong>{{ offers }}</strong></div></div>
+<div class="dashboard-grid"><section class="card"><h2>Statusverteilung</h2>{% for item in status_counts %}<div class="bar-row"><span>{{ item.name }}</span><strong>{{ item.count }}</strong><div class="bar"><i style="width: {{ ((item.count / total * 100) if total else 0)|round(1) }}%"></i></div></div>{% endfor %}</section><section class="card"><h2>Nächste Wiedervorlagen</h2>{% for a in upcoming %}<a class="dash-item" href="{{ url_for('edit_application', application_id=a.id) }}"><strong>{{ a.company }}</strong><span>{{ a.position }}</span><time>{{ a.follow_up_date.strftime('%d.%m.%Y') }}</time></a>{% else %}<p class="muted">Keine anstehenden Wiedervorlagen.</p>{% endfor %}</section></div>
+<section class="card"><h2>Überfällige Wiedervorlagen</h2>{% for a in overdue %}<a class="dash-item overdue-row" href="{{ url_for('edit_application', application_id=a.id) }}"><strong>{{ a.company }}</strong><span>{{ a.position }}</span><time>{{ a.follow_up_date.strftime('%d.%m.%Y') }}</time></a>{% else %}<p class="muted">Keine überfälligen Wiedervorlagen.</p>{% endfor %}</section>
+{% endblock %}

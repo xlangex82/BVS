@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block title %}{{cfg.title}}{% endblock %}{% block content %}
+<div class="page-head"><div><h1>{{cfg.title}}</h1><p class="muted">{{'Eintrag bearbeiten' if item else 'Neuen Eintrag anlegen'}}</p></div><a class="button" href="{{url_for('cv_index')}}">← Lebenslauf</a></div>
+<form method="post" class="card cv-entry-form">
+{% for name,label,field_type,required in cfg.fields %}
+  {% set value = item|attr(name) if item else none %}
+  {% if field_type=='textarea' %}<label>{{label}}{% if required %} *{% endif %}<textarea name="{{name}}" rows="8" {% if required %}required{% endif %}>{{value or ''}}</textarea></label>
+  {% elif field_type=='checkbox' %}<label class="check"><input type="checkbox" name="{{name}}" {% if value %}checked{% endif %}> {{label}}</label>
+  {% else %}<label>{{label}}{% if required %} *{% endif %}<input type="{{field_type}}" name="{{name}}" value="{% if field_type=='date' and value %}{{value.isoformat()}}{% else %}{{value if value is not none else ''}}{% endif %}" {% if required %}required{% endif %}></label>{% endif %}
+{% endfor %}
+<div class="form-actions"><button class="button primary">Speichern</button></div>
+</form>{% endblock %}

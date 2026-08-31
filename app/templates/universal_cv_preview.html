@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{cv.title}}{% if cv.target_position %} – {{cv.target_position}}{% endif %}</title>
+<style>
+@page{size:A4;margin:{{style.page_margin_mm}}mm}
+*{box-sizing:border-box}body{margin:0;background:#e7ebf0;color:#202733;font-family:{% if style.font_family=='Times-Roman' %}"Times New Roman",serif{% elif style.font_family=='Courier' %}"Courier New",monospace{% else %}Arial,Helvetica,sans-serif{% endif %};font-size:{{metrics.body_pt}}pt}.toolbar{position:sticky;top:0;z-index:10;background:#172033;padding:9px;display:flex;justify-content:center;gap:8px}.toolbar a,.toolbar button{border:0;background:#fff;color:#172033;border-radius:5px;padding:7px 11px;text-decoration:none;cursor:pointer}.sheet{width:210mm;min-height:297mm;margin:12px auto;background:#fff;padding:{{style.page_margin_mm}}mm;box-shadow:0 3px 18px rgba(0,0,0,.16);font-size:{{metrics.body_pt}}pt;line-height:{{metrics.line_height}}}.cv-head{display:flex;gap:5mm;align-items:flex-start;border-bottom:1px solid #d8dee8;padding-bottom:5mm;margin-bottom:4mm}.logo{max-width:19mm;max-height:19mm}.photo{width:30mm;height:38mm;object-fit:cover;border-radius:2mm}.document-title{text-transform:uppercase;letter-spacing:.12em;font-size:{{metrics.document_pt}}pt;color:#667085;font-weight:700}.cv-head.photo-left{flex-direction:row}.cv-head.photo-right .photo{margin-left:auto;order:3}.cv-head.photo-left .photo{order:-1}.cv-head.centered{justify-content:center;text-align:center;flex-direction:column;align-items:center}.cv-head.centered .photo{order:0}.cv-head.minimal .photo{display:none}.head-main h1{font-size:{{metrics.name_pt}}pt;margin:0}.target{font-size:{{metrics.target_pt}}pt;color:#526172;margin-top:1mm}.contact{font-size:{{metrics.contact_pt}}pt;color:#667085;margin-top:2mm}.profile{margin-bottom:4mm}.section{margin-top:5mm}.section h2{font-size:{{metrics.section_pt}}pt;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #d8dee8;padding-bottom:1.2mm;margin:0 0 3mm}.entry{break-inside:avoid;margin-bottom:3mm}.entry-head{display:flex;justify-content:space-between;gap:5mm}.entry strong{font-size:{{metrics.entry_title_pt}}pt}.sub,.period{color:#667085}.desc{white-space:pre-line;margin-top:1mm}.footer{margin-top:7mm;border-top:1px solid #d8dee8;padding-top:2mm;color:#77808e;font-size:{{metrics.small_pt}}pt;text-align:center}
+.sheet.modern .cv-head{background:#eef4f9;margin:-{{style.page_margin_mm}}mm -{{style.page_margin_mm}}mm 5mm;padding:12mm {{style.page_margin_mm}}mm 6mm;border:0}.sheet.modern .section h2{color:{{style.accent_color}}}.modern-grid{display:grid;grid-template-columns:minmax(0,1fr) {{metrics.modern_sidebar_mm}}mm;gap:{{metrics.modern_gap_mm}}mm}.modern-side{border-left:1px solid #d8dee8;padding-left:6mm}.sheet.compact{font-size:{{metrics.body_pt}}pt;line-height:{{metrics.line_height}};padding-top:11mm;padding-bottom:11mm}.sheet.compact .cv-head{margin-bottom:2.5mm;padding-bottom:3mm}.sheet.compact .section{margin-top:3mm}.sheet.compact .entry{margin-bottom:1.8mm}.sheet.compact .head-main h1{font-size:{{metrics.name_pt}}pt}.compact-inline{margin:1mm 0}
+@media print{body{background:#fff}.toolbar{display:none}.sheet{width:auto;min-height:0;margin:0;padding:0;box-shadow:none}.sheet.modern .cv-head{margin:0 0 5mm;padding:0 0 5mm;background:transparent;border-bottom:2px solid {{style.accent_color}}}}
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Drucken / Als PDF speichern</button><a href="{{url_for('universal_cv_pdf',cv_id=cv.id)}}">PDF herunterladen</a><a href="{{url_for('universal_cv_edit',cv_id=cv.id)}}">Bearbeiten</a></div>
+<main class="sheet {{style.base_layout}}">
+<header class="cv-head {{header.header_layout}}">
+{% if header.logo_filename %}<img class="logo" src="{{url_for('cv_media',filename=header.logo_filename)}}" alt="CV-Logo">{% endif %}
+{% if header.photo_filename %}<img class="photo" src="{{url_for('cv_media',filename=header.photo_filename)}}" alt="Bewerbungsfoto">{% endif %}
+<div class="head-main">
+{% if header.show_document_title %}<div class="document-title">{{header.document_title or 'Lebenslauf'}}</div>{% endif %}
+<h1>{{(profile.get('first_name','') ~ ' ' ~ profile.get('last_name',''))|trim or 'Lebenslauf'}}</h1>
+{% if header.show_professional_title and profile.get('professional_title') %}<div class="target">{{profile.get('professional_title')}}</div>{% endif %}
+{% if header.header_subtitle %}<div class="target">{{header.header_subtitle}}</div>{% endif %}
+<div class="target">{% if header.show_target_position %}{{cv.target_position or ''}}{% endif %}{% if header.show_target_company and cv.target_company %}{% if header.show_target_position and cv.target_position %} · {% endif %}{{cv.target_company}}{% endif %}</div>
+{% if header.show_contact %}<div class="contact">{% if profile.get('email') %}{{profile.email}}{% endif %}{% if profile.get('phone') %} · {{profile.phone}}{% endif %}{% if profile.get('city') %} · {{profile.get('postal_code','')}} {{profile.city}}{% endif %}</div>{% endif %}
+</div>
+</header>
+{% if cv.profile_summary %}<section class="profile"><strong>Profil</strong><div class="desc">{{cv.profile_summary}}</div></section>{% endif %}
+
+{% macro render_section(section,items) %}
+{% if items %}
+<section class="section">
+<h2>{{section_labels[section]}}</h2>
+{% if cv.template and style.base_layout=='compact' and section in ['skills','languages'] %}
+<div class="compact-inline">{% for e in items %}{% set d=entry_data(e) %}{% if section=='skills' %}<strong>{{d.get('name')}}</strong>{% if d.get('level') %} ({{d.get('level')}}){% endif %}{% else %}<strong>{{d.get('language')}}</strong>{% if d.get('level') %} ({{d.get('level')}}){% endif %}{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+{% else %}
+{% for e in items %}{% set d=entry_data(e) %}
+<article class="entry">
+<div class="entry-head"><div>
+{% if section=='experience' %}<strong>{{d.get('position')}}</strong><div class="sub">{{d.get('employer')}}{% if d.get('location') %} · {{d.get('location')}}{% endif %}</div>
+{% elif section=='education' %}<strong>{{d.get('degree') or d.get('field_of_study') or d.get('institution')}}</strong><div class="sub">{{d.get('institution')}}</div>
+{% elif section=='skills' %}<strong>{{d.get('name')}}</strong><div class="sub">{{d.get('category') or ''}}{% if d.get('level') %} · {{d.get('level')}}{% endif %}</div>
+{% elif section=='languages' %}<strong>{{d.get('language')}}</strong><div class="sub">{{d.get('level') or ''}}</div>
+{% elif section=='certifications' %}<strong>{{d.get('name')}}</strong><div class="sub">{{d.get('issuer') or ''}}</div>
+{% elif section=='projects' %}<strong>{{d.get('name')}}</strong><div class="sub">{{d.get('role') or ''}}{% if d.get('technologies') %} · {{d.get('technologies')}}{% endif %}</div>
+{% else %}<strong>{{d.get('title')}}</strong><div class="sub">{{d.get('category') or ''}}{% if d.get('organization') %} · {{d.get('organization')}}{% endif %}</div>{% endif %}
+</div><div class="period">{{period(d)}}</div></div>
+{% if d.get('description') %}<div class="desc">{{d.get('description')}}</div>{% endif %}
+</article>
+{% endfor %}
+{% endif %}
+</section>
+{% endif %}
+{% endmacro %}
+
+{% if cv.template and style.base_layout=='modern' %}
+<div class="modern-grid"><div class="modern-main">
+{% for section in section_order %}{% if section not in ['skills','languages'] %}{{render_section(section,groups[section])}}{% endif %}{% endfor %}
+</div><aside class="modern-side">{% for section in section_order %}{% if section in ['skills','languages'] %}{{render_section(section,groups[section])}}{% endif %}{% endfor %}</aside></div>
+{% else %}
+{% for section in section_order %}{{render_section(section,groups[section])}}{% endfor %}
+{% endif %}
+<div class="footer">© {{today.year}} {{branding.copyright_holder}} · {{branding.author}}</div>
+</main>
+</body></html>

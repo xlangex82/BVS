@@ -1,0 +1,39 @@
+services:
+  web:
+    build: .
+    container_name: bewerbungsverwaltung-web
+    restart: unless-stopped
+    ports:
+      - "8080:5000"
+    environment:
+      SECRET_KEY: "change-this-private-secret"
+      DATABASE_URL: "mysql+pymysql://bewerbung:bewerbung@db:3306/bewerbungen?charset=utf8mb4"
+      UPLOAD_DIR: "/data/attachments"
+      MAX_CONTENT_LENGTH: "20971520"
+      BACKUP_DB_HOST: "db"
+      BACKUP_DB_USER: "bewerbung"
+      BACKUP_DB_PASSWORD: "bewerbung"
+      BACKUP_DB_NAME: "bewerbungen"
+    volumes:
+      - ./data/attachments:/data/attachments
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    container_name: bewerbungsverwaltung-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: bewerbungen
+      MYSQL_USER: bewerbung
+      MYSQL_PASSWORD: bewerbung
+      MYSQL_ROOT_PASSWORD: change-this-root-password
+    volumes:
+      - ./mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bewerbung", "-pbewerbung"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block title %}Lebenslauf · Bewerbungsverwaltung{% endblock %}{% block content %}
+<div class="page-head"><div><h1>Master-Lebenslauf</h1><p class="muted">Zentrale Datenquelle für bewerbungsspezifische CV-Snapshots.</p></div><div class="page-actions"><a class="button" href="{{url_for('universal_cvs')}}">Universelle CVs</a><a class="button" href="{{url_for('cv_templates')}}">Design-Templates</a><a class="button primary" href="{{url_for('cv_profile')}}">Stammdaten bearbeiten</a></div></div>
+<section class="card cv-profile">
+  <div><h2>{{ ((profile.first_name or '') ~ ' ' ~ (profile.last_name or ''))|trim if profile else 'Stammdaten' }}</h2>
+  {% if profile and profile.professional_title %}<p class="cv-title">{{profile.professional_title}}</p>{% endif %}
+  {% if profile and profile.summary %}<p class="cv-summary">{{profile.summary}}</p>{% else %}<p class="muted">Noch keine Kurzbeschreibung hinterlegt.</p>{% endif %}</div>
+  <div class="cv-contact">
+    {% if profile and profile.email %}<span>{{profile.email}}</span>{% endif %}{% if profile and profile.phone %}<span>{{profile.phone}}</span>{% endif %}
+    {% if profile and profile.city %}<span>{{profile.postal_code or ''}} {{profile.city}}</span>{% endif %}
+  </div>
+</section>
+{% for key,cfg in sections.items() %}
+<section class="card cv-section">
+  <div class="section-head"><div><h2>{{cfg.title}}</h2><span class="muted">{{data[key]|length}} Einträge</span></div><a class="button" href="{{url_for('cv_new',section=key)}}">+ Eintrag</a></div>
+  <div class="cv-items">
+  {% for item in data[key] %}
+    <article class="cv-item">
+      <div class="cv-item-main">
+      {% if key=='experience' %}<strong>{{item.position}}</strong><span>{{item.employer}}{% if item.location %} · {{item.location}}{% endif %}</span><small>{{item.start_date.strftime('%m.%Y') if item.start_date else '?'}} – {{'heute' if item.is_current else (item.end_date.strftime('%m.%Y') if item.end_date else '?')}}</small>
+      {% elif key=='education' %}<strong>{{item.degree or item.field_of_study or item.institution}}</strong><span>{{item.institution}}{% if item.location %} · {{item.location}}{% endif %}</span><small>{{item.start_date.strftime('%m.%Y') if item.start_date else '?'}} – {{'heute' if item.is_current else (item.end_date.strftime('%m.%Y') if item.end_date else '?')}}</small>
+      {% elif key=='skills' %}<strong>{{item.name}}</strong><span>{{item.category or 'Ohne Kategorie'}}{% if item.level %} · {{item.level}}{% endif %}</span>
+      {% elif key=='languages' %}<strong>{{item.language}}</strong><span>{{item.level or 'Niveau nicht angegeben'}}</span>
+      {% elif key=='certifications' %}<strong>{{item.name}}</strong><span>{{item.issuer or 'Anbieter nicht angegeben'}}{% if item.issue_date %} · {{item.issue_date.strftime('%m.%Y')}}{% endif %}</span>
+      {% elif key=='projects' %}<strong>{{item.name}}</strong><span>{{item.role or 'Projekt'}}{% if item.technologies %} · {{item.technologies}}{% endif %}</span>
+      {% else %}<strong>{{item.title}}</strong><span>{{item.category or 'Weitere Station'}}{% if item.organization %} · {{item.organization}}{% endif %}</span>
+      {% endif %}
+      {% if item.description is defined and item.description %}<p>{{item.description}}</p>{% endif %}
+      </div>
+      <div class="cv-item-actions"><a class="button small-button" href="{{url_for('cv_edit',section=key,item_id=item.id)}}">Bearbeiten</a><form method="post" action="{{url_for('cv_delete',section=key,item_id=item.id)}}" onsubmit="return confirm('Eintrag wirklich löschen?')"><button class="link-danger">Löschen</button></form></div>
+    </article>
+  {% else %}<p class="muted">Noch keine Einträge.</p>{% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

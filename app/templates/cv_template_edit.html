@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{'Neues CV-Template' if new_template else 'Template ' ~ template.name}} – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{'Eigenes CV-Template erstellen' if new_template else template.name}}</h1><p class="muted">Designparameter für HTML-Vorschau und PDF.</p></div><a class="button" href="{{url_for('cv_templates')}}">← Templates</a></div>
+<form method="post" class="card">
+<div class="settings-grid">
+<label>Name<input name="name" required value="{{template.name if template else ''}}"></label>
+<label>Sortierung<input type="number" name="sort_order" value="{{template.sort_order if template else 100}}"></label>
+<label class="settings-span">Beschreibung<textarea name="description" rows="3">{{template.description if template and template.description else ''}}</textarea></label>
+<label>Grundlayout
+<select name="base_layout">
+{% set current=style.base_layout if style else 'classic' %}
+<option value="classic" {% if current=='classic' %}selected{% endif %}>Klassisch – einspaltig</option>
+<option value="modern" {% if current=='modern' %}selected{% endif %}>Modern – zweispaltig</option>
+<option value="compact" {% if current=='compact' %}selected{% endif %}>Kompakt – platzsparend</option>
+</select></label>
+<label>Akzentfarbe<input type="color" name="accent_color" value="{{style.accent_color if style else '#172033'}}"></label>
+<label>Schrift
+<select name="font_family">
+{% set font=style.font_family if style else 'Helvetica' %}
+<option value="Helvetica" {% if font=='Helvetica' %}selected{% endif %}>Helvetica / Sans Serif</option>
+<option value="Times-Roman" {% if font=='Times-Roman' %}selected{% endif %}>Times / Serif</option>
+<option value="Courier" {% if font=='Courier' %}selected{% endif %}>Courier / Monospace</option>
+</select></label>
+<label>Schrift-Skalierung<input type="number" step="0.05" min="0.8" max="1.3" name="font_scale" value="{{style.font_scale if style else 1.0}}"></label>
+<label>Seitenrand in mm<input type="number" min="8" max="25" name="page_margin_mm" value="{{style.page_margin_mm if style else 15}}"></label>
+<label class="settings-span">Abschnittsreihenfolge
+<input name="section_order" value="{{style.section_order if style else 'experience,education,projects,skills,languages,certifications,other'}}">
+<span class="small">Schlüssel: experience, education, projects, skills, languages, certifications, other</span>
+</label>
+</div>
+<div class="template-switches">
+<label class="check"><input type="checkbox" name="is_active" {% if not template or template.is_active %}checked{% endif %}> Für neue CVs auswählbar</label>
+<label class="check"><input type="checkbox" name="show_logo" {% if not style or style.show_logo %}checked{% endif %}> Logo anzeigen</label>
+<label class="check"><input type="checkbox" name="show_company" {% if not style or style.show_company %}checked{% endif %}> Zielunternehmen anzeigen</label>
+<label class="check"><input type="checkbox" name="show_target_position" {% if not style or style.show_target_position %}checked{% endif %}> Zielposition anzeigen</label>
+</div>
+<div class="designer-note">Die drei Grundlayouts bestimmen die Struktur. Farbe, Schrift, Größe, Rand und sichtbare Kopfzeilen lassen sich je Template individuell überschreiben.</div>
+<div class="form-actions"><button class="button primary">{{'Template erstellen' if new_template else 'Design speichern'}}</button></div>
+</form>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Übersicht – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Bewerbungen</h1>
+    <p class="muted">Alle Bewerbungsvorgänge im Überblick.</p>
+  </div>
+  <div class="page-actions">
+    <a class="button" target="_blank" href="{{url_for('print_overview',q=q,status=selected_status or '',sort=sort,date_from=date_from,date_to=date_to,process_mode=process_mode)}}">Übersicht drucken</a>
+    <a class="button" href="{{url_for('overview_pdf',q=q,status=selected_status or '',sort=sort,date_from=date_from,date_to=date_to,process_mode=process_mode)}}">Übersicht als PDF</a>
+    <a class="button" href="{{url_for('export_excel',q=q,status=selected_status or '',sort=sort,date_from=date_from,date_to=date_to,process_mode=process_mode)}}">Excel Export</a>
+    <a class="button primary" href="{{ url_for('new_application') }}">+ Neue Bewerbung</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span>Gesamt</span><strong>{{ total }}</strong></div>
+  <div class="stat"><span>Aktiv</span><strong>{{ active }}</strong></div>
+  <div class="stat"><span>Gespräche</span><strong>{{ interviews }}</strong></div>
+  <div class="stat"><span>Angebote</span><strong>{{ offers }}</strong></div>
+</div>
+
+<form class="filters filters-extended" method="get">
+  <input name="q" value="{{ q }}" placeholder="Suche Unternehmen, Position, Ansprechpartner …">
+  <select name="process_mode" aria-label="Vorgänge">
+    <option value="active" {% if process_mode == 'active' %}selected{% endif %}>Nur aktive Vorgänge</option>
+    <option value="completed" {% if process_mode == 'completed' %}selected{% endif %}>Nur erledigte Vorgänge</option>
+    <option value="all" {% if process_mode == 'all' %}selected{% endif %}>Alle Vorgänge</option>
+  </select>
+  <select name="status">
+    <option value="">Alle Status</option>
+    {% for s in statuses %}
+      <option value="{{ s.id }}" {% if selected_status == s.id %}selected{% endif %}>{{ s.name }}</option>
+    {% endfor %}
+  </select>
+  <label class="filter-date">Bewerbung von<input type="date" name="date_from" value="{{date_from}}"></label>
+  <label class="filter-date">bis<input type="date" name="date_to" value="{{date_to}}"></label>
+  <select name="sort">
+    <option value="follow_up" {% if sort == 'follow_up' %}selected{% endif %}>Wiedervorlage</option>
+    <option value="created" {% if sort == 'created' %}selected{% endif %}>Zuletzt angelegt</option>
+    <option value="application_date" {% if sort == 'application_date' %}selected{% endif %}>Bewerbungsdatum</option>
+    <option value="company" {% if sort == 'company' %}selected{% endif %}>Unternehmen A–Z</option>
+  </select>
+  <button class="button" type="submit">Filtern</button>
+  <a class="button light" href="{{ url_for('index') }}">Zurücksetzen</a>
+</form>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Unternehmen</th><th>Position</th><th>Status</th><th>Bewerbung</th><th>Wiedervorlage</th><th></th></tr></thead>
+  <tbody>
+  {% for a in applications %}
+    <tr>
+      <td data-label="Unternehmen"><a class="company-link" href="{{ url_for('edit_application', application_id=a.id) }}"><strong>{{ a.company }}</strong></a><div class="small">{{ a.reference }}</div></td>
+      <td data-label="Position">{{ a.position }}{% if a.location %}<div class="small">{{ a.location }}</div>{% endif %}</td>
+      <td data-label="Status"><span class="badge">{{ a.status.name }}</span></td>
+      <td data-label="Bewerbung">{{ a.application_date.strftime('%d.%m.%Y') if a.application_date else '–' }}</td>
+      <td data-label="Wiedervorlage">{% if a.follow_up_date %}<span class="{% if a.follow_up_date < today %}overdue{% endif %}">{{a.follow_up_date.strftime('%d.%m.%Y')}}</span>{% else %}–{% endif %}</td>
+      <td data-label="Aktion" class="action-cell"><a class="button small-button" href="{{url_for('edit_application',application_id=a.id)}}">Bearbeiten</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="empty">Keine Bewerbungen gefunden.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+  {% if pagination.has_prev %}
+    <a href="{{url_for('index',page=pagination.prev_num,q=q,status=selected_status,sort=sort,date_from=date_from,date_to=date_to,process_mode=process_mode)}}">←</a>
+  {% endif %}
+  <span>Seite {{pagination.page}} von {{pagination.pages}}</span>
+  {% if pagination.has_next %}
+    <a href="{{url_for('index',page=pagination.next_num,q=q,status=selected_status,sort=sort,date_from=date_from,date_to=date_to,process_mode=process_mode)}}">→</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Personalisieren – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Personalisieren</h1><p class="muted">Branding und allgemeine Angaben zentral konfigurieren.</p></div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card settings-form">
+  <h2>Applikation</h2>
+  <div class="settings-grid">
+    <label>Applikationsname
+      <input name="app_name" required value="{{settings.app_name}}">
+    </label>
+    <label>Subname / Erklärung
+      <input name="app_subname" value="{{settings.app_subname}}">
+    </label>
+    <label>Autor
+      <input name="author" value="{{settings.author}}">
+    </label>
+    <label>Copyright
+      <input name="copyright_holder" value="{{settings.copyright_holder}}">
+    </label>
+    <label>Website
+      <input type="url" name="website" value="{{settings.website}}">
+    </label>
+    <label>Zusätzlicher Footer-Text
+      <input name="footer_text" value="{{settings.footer_text}}">
+    </label>
+  </div>
+
+
+
+  <h2>Übersicht</h2>
+  <div class="settings-grid">
+    <label>Standardansicht der Vorgänge
+      <select name="overview_default_mode">
+        <option value="active" {% if settings.overview_default_mode == 'active' %}selected{% endif %}>Nur aktive Vorgänge</option>
+        <option value="completed" {% if settings.overview_default_mode == 'completed' %}selected{% endif %}>Nur erledigte Vorgänge</option>
+        <option value="all" {% if settings.overview_default_mode == 'all' %}selected{% endif %}>Alle Vorgänge</option>
+      </select>
+    </label>
+  </div>
+  <p class="small">Diese Ansicht wird verwendet, wenn die Bewerbungsübersicht ohne expliziten Vorgangsfilter geöffnet wird.</p>
+
+  <h2>Logo</h2>
+  <div class="logo-settings">
+    <div class="logo-preview">
+      {% if settings.logo_filename %}
+        <img src="{{url_for('branding_logo',filename=settings.logo_filename)}}" alt="Aktuelles Logo">
+      {% else %}
+        <span>Kein Logo hinterlegt</span>
+      {% endif %}
+    </div>
+    <div>
+      <label>Neues Logo hochladen
+        <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+      </label>
+      <p class="small">PNG, JPG/JPEG oder WEBP. Ein neues Logo ersetzt das bisherige.</p>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="button primary" type="submit" name="action" value="save">Einstellungen speichern</button>
+    {% if settings.logo_filename %}
+      <button class="button danger-button" type="submit" name="action" value="remove_logo" formnovalidate>Logo entfernen</button>
+    {% endif %}
+  </div>
+</form>
+
+<div class="card">
+  <h2>Navigation</h2>
+  <p class="muted">Menüpunkte gruppieren, umbenennen, sortieren oder ausblenden. Die Route selbst bleibt fest, damit keine Funktion verloren geht.</p>
+  <form method="post">
+    <div class="menu-config-table">
+      <div class="menu-config-head"><span>Sichtbar</span><span>Menüpunkt</span><span>Bezeichnung</span><span>Gruppe</span><span>Reihenfolge</span></div>
+      {% for item in menu_items %}
+      <div class="menu-config-row">
+        <label class="check"><input type="checkbox" name="menu_visible_{{item.key}}" {% if item.visible %}checked{% endif %}></label>
+        <strong>{{item.key}}</strong>
+        <input name="menu_label_{{item.key}}" value="{{item.label}}">
+        <input name="menu_group_{{item.key}}" value="{{item.group}}" list="menu-groups">
+        <input type="number" name="menu_order_{{item.key}}" value="{{item.order}}">
+      </div>
+      {% endfor %}
+    </div>
+    <datalist id="menu-groups"><option>Bewerbungen</option><option>Lebenslauf</option><option>Werkzeuge</option><option>System</option></datalist>
+    <div class="form-actions">
+      <button class="button primary" type="submit" name="action" value="save_menu">Navigation speichern</button>
+      <button class="button light" type="submit" name="action" value="reset_menu">Standard wiederherstellen</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Vorschau</h2>
+  <div class="branding-preview">
+    {% if settings.logo_filename %}<img src="{{url_for('branding_logo',filename=settings.logo_filename)}}" alt="Logo">{% endif %}
+    <div><strong>{{settings.app_name}}</strong><span>{{settings.app_subname}}</span><small>© {{today.year}} {{settings.copyright_holder}} · Autor: {{settings.author}}</small></div>
+  </div>
+</div>
+{% endblock %}

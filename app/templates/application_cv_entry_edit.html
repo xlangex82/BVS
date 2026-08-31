@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Snapshot-Eintrag bearbeiten – {{branding.app_name}}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{cfg.title}}</h1><p class="muted">Nur diese CV-Version wird geändert. Der Master-Lebenslauf bleibt unverändert.</p></div><a class="button" href="{{url_for('application_cv_edit',cv_id=entry.application_cv_id)}}">← CV-Version</a></div>
+<form method="post" class="card cv-entry-form">
+{% for name,label,field_type,required in cfg.fields %}
+  {% set value = data.get(name) %}
+  {% if field_type=='textarea' %}
+    <label>{{label}}{% if required %} *{% endif %}<textarea name="{{name}}" rows="8" {% if required %}required{% endif %}>{{value or ''}}</textarea></label>
+  {% elif field_type=='checkbox' %}
+    <label class="check"><input type="checkbox" name="{{name}}" {% if value %}checked{% endif %}> {{label}}</label>
+  {% else %}
+    <label>{{label}}{% if required %} *{% endif %}<input type="{{field_type}}" name="{{name}}" value="{{value if value is not none else ''}}" {% if required %}required{% endif %}></label>
+  {% endif %}
+{% endfor %}
+<div class="form-actions"><button class="button primary">Snapshot-Eintrag speichern</button></div>
+</form>
+{% endblock %}
